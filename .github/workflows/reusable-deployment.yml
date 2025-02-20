@@ -17,6 +17,11 @@ on:
       helm-release-name:
         default: todoapp
         type: string
+      artifact_name:
+        type: string
+        description: 'The artifact name from docker-ci'
+        required: true
+
 jobs:
     deploy-helm:
       name: ${{ inputs.environment }}
@@ -31,17 +36,13 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: helm-artifacts
+          name: helm-artifacts${{inputs.artifact_name}}
           path: .
 
       - uses: actions/download-artifact@v4
         with:
-          name: kind-cluster
+          name: kind-cluster${{inputs.artifact_name}}
           path: .
-
-      - name: List workspace
-        run: |
-          ls -la
 
       - name: Set Up Helm
         uses: azure/setup-helm@v4.2.0
@@ -61,34 +62,23 @@ jobs:
           --set mysql.secrets.MYSQL_ROOT_PASSWORD="${{ secrets.MYSQL_ROOT_PASSWORD }}" \
           --set mysql.secrets.MYSQL_USER="${{ secrets.MYSQL_USER }}" \
           --set mysql.secrets.MYSQL_PASSWORD="${{ secrets.MYSQL_PASSWORD }}" \
-          --set todoapp.secrets.SECRET_KEY="${{ secrets.APP_SECRET_KEY }}" \
-          --set todoapp.secrets.DB_NAME="${{ secrets.APP_DB_NAME }}" \
+          --set todoapp.secrets.SECRET_KEY="${{ secrets.SECRET_KEY }}" \
+          --set todoapp.secrets.DB_NAME="${{ secrets.DB_NAME }}" \
           --set todoapp.secrets.DB_USER="${{ secrets.MYSQL_USER }}" \
           --set todoapp.secrets.DB_PASSWORD="${{ secrets.MYSQL_PASSWORD }}" \
-          --set todoapp.secrets.DB_HOST="${{ secrets.APP_DB_HOST }}" \
+          --set todoapp.secrets.DB_HOST="${{ secrets.DB_HOST }}" \
           --set todoapp.image.tag=${{ github.sha }}
 
       - name: Deploy helm to Development
         run: |
-          helm upgrade --install --wait --timeout 360s --debug ${{ inputs.helm-release-name }} ./todoapp-*.tgz \
+          helm upgrade --install --wait --timeout 180s --debug ${{ inputs.helm-release-name }} ./todoapp-*.tgz \
           -f ${{ inputs.helm-values-path }} \
-          --set mysql.secrets.MYSQL_ROOT_PASSWORD="12345" \
-          --set mysql.secrets.MYSQL_USER="app_user" \
-          --set mysql.secrets.MYSQL_PASSWORD="1234" \
-          --set todoapp.secrets.SECRET_KEY="asdasdasdadasdadddasd" \
-          --set todoapp.secrets.DB_NAME="app_db" \
-          --set todoapp.secrets.DB_USER="app_user" \
-          --set todoapp.secrets.DB_PASSWORD="1234" \
-          --set todoapp.secrets.DB_HOST="mysql-0.mysql.mysql.svc.cluster.local" \
+          --set mysql.secrets.MYSQL_ROOT_PASSWORD="${{ secrets.MYSQL_ROOT_PASSWORD }}" \
+          --set mysql.secrets.MYSQL_USER="${{ secrets.MYSQL_USER }}" \
+          --set mysql.secrets.MYSQL_PASSWORD="${{ secrets.MYSQL_PASSWORD }}" \
+          --set todoapp.secrets.SECRET_KEY="${{ secrets.SECRET_KEY }}" \
+          --set todoapp.secrets.DB_NAME="${{ secrets.DB_NAME }}" \
+          --set todoapp.secrets.DB_USER="${{ secrets.MYSQL_USER }}" \
+          --set todoapp.secrets.DB_PASSWORD="${{ secrets.MYSQL_PASSWORD }}" \
+          --set todoapp.secrets.DB_HOST="${{ secrets.DB_HOST }}" \
           --set todoapp.image.tag=${{ github.sha }}
-
-      - name: Debug
-        if: always()
-        run: |
-          kubectl get pods -n todoapp
-          kubectl get pods -n mysql
-
-          kubectl get deployments -n mysql
-          kubectl describe deployment mysql -n mysql
-          kubectl describe pod mysql-0 -n mysql
-          kubectl logs mysql-0 -n mysql
