@@ -39,6 +39,11 @@ jobs:
     defaults:
       run:
         working-directory: ./src
+
+    outputs:
+      PythonVersion: ${{ matrix.PythonVersion }}
+      Ostype: ${{ matrix.OsType }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
