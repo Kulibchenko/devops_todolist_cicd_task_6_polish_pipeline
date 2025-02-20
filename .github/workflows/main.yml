@@ -41,8 +41,8 @@ jobs:
         working-directory: ./src
 
     outputs:
-      PythonVersion: ${{ matrix.PythonVersion }}
-      Ostype: ${{ matrix.OsType }}
+      matrix.PythonVersion: ${{ matrix.PythonVersion }}
+      matrix.OsType: ${{ matrix.OsType }}
 
     steps:
       - name: Checkout
