@@ -133,7 +133,7 @@ jobs:
 
     - uses: actions/download-artifact@v4
       with:
-        name: helm-artifacts${{ inputs.PythonVersion }}${{ inputs.OsType || '-ubuntu-latest-3.8' }}
+        name: helm-artifacts${{ inputs.OsType }}${{ inputs.PythonVersion || '-ubuntu-latest-3.8' }}
         path: .
 
     - name: Set Up Helm
